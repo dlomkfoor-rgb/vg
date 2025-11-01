@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>loufiks | Веб-разработка</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --secondary: #f59e0b;
+            --accent: #ec4899;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            --shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-radius: 16px;
+        }
+
+        [data-theme="light"] {
+            --dark: #f8fafc;
+            --light: #0f172a;
+            --gray: #475569;
+            --card-bg: rgba(226, 232, 240, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dark) 0%, var(--card-bg) 100%);
+            color: var(--light);
+            overflow-x: hidden;
+            line-height: 1.6;
+            transition: var(--transition);
+        }
+
+        /* Настройки */
+        .settings-panel {
+            position: fixed;
+            top: 100px;
+            right: -300px;
+            width: 280px;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            z-index: 1001;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-panel.open {
+            right: 20px;
+        }
+
+        .settings-toggle {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1002;
+            transition: var(--transition);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .settings-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .settings-option {
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-option h3 {
+            margin-bottom: 0.8rem;
+            color: var(--light);
+            font-size: 1.1rem;
+        }
+
+        .theme-selector, .language-selector {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .theme-btn, .lang-btn {
+            padding: 0.6rem 1.2rem;
+            border: 2px solid var(--primary);
+            background: transparent;
+            color: var(--light);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .theme-btn.active, .lang-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .theme-btn:hover, .lang-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Лоадер */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.8s ease;
+        }
+
+        .loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .spinner {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .spinner-circle {
+            width: 100%;
+            height: 100%;
+            border: 4px solid transparent;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+        }
+
+        .spinner-circle:nth-child(2) {
+            animation-delay: -0.75s;
+            border-top-color: var(--secondary);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Навигация */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(15px);
+            background: rgba(15, 23, 42, 0.85);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(-100%);
+            animation: slideInNav 1s cubic-bezier(0.23, 1, 0.32, 1) forwards 0.5s;
+        }
+
+        [data-theme="light"] nav {
+            background: rgba(248, 250, 252, 0.85);
+        }
+
+        @keyframes slideInNav {
+            to { transform: translateY(0); }
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-icon {
+            color: var(--secondary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 500;
+            position: relative;
+            padding: 0.5rem 0;
+            transition: var(--transition);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            transition: width 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* Hero секция */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 5%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            max-width: 600px;
+            z-index: 2;
+            opacity: 0;
+            transform: translateY(50px);
+            animation: fadeInUp 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards 0.8s;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--gray);
+            margin-bottom: 2.5rem;
+            animation: fadeIn 1.5s ease forwards 1.2s;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: var(--transition);
+            border: 2px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: var(--shadow);
+            animation: fadeIn 1s ease forwards 1.5s;
+            opacity: 0;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.8s;
+            z-index: -1;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: var(--shadow);
+        }
+
+        /* SVG анимации */
+        .hero-svg {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50%;
+            max-width: 800px;
+            opacity: 0;
+            animation: fadeInRight 1.5s cubic-bezier(0.23, 1, 0.32, 1) forwards 1s;
+        }
+
+        @keyframes fadeInRight {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .svg-path {
+            stroke-dasharray: 1500;
+            stroke-dashoffset: 1500;
+            animation: drawPath 3s cubic-bezier(0.23, 1, 0.32, 1) forwards 1.2s;
+        }
+
+        @keyframes drawPath {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        /* Секции */
+        section {
+            padding: 8rem 5%;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 1s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 5rem;
+            font-size: 3rem;
+            position: relative;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        section.visible .section-title {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.2s;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 5px;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            border-radius: 3px;
+            opacity: 0;
+            transform: scaleX(0);
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.5s;
+        }
+
+        section.visible .section-title::after {
+            opacity: 1;
+            transform: scaleX(1) translateX(-50%);
+        }
+
+        /* О себе */
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        section.visible .about-content {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.4s;
+        }
+
+        .about-text h3 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--primary);
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        section.visible .about-text h3 {
+            opacity: 1;
+            transform: translateX(0);
+            transition-delay: 0.6s;
+        }
+
+        .about-text p {
+            margin-bottom: 1.8rem;
+            color: var(--gray);
+            opacity: 0;
+            transform: translateX(-30px);
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        section.visible .about-text p:nth-child(2) {
+            opacity: 1;
+            transform: translateX(0);
+            transition-delay: 0.8s;
+        }
+
+        section.visible .about-text p:nth-child(3) {
+            opacity: 1;
+            transform: translateX(0);
+            transition-delay: 1s;
+        }
+
+        section.visible .about-text p:nth-child(4) {
+            opacity: 1;
+            transform: translateX(0);
+            transition-delay: 1.2s;
+        }
+
+        .about-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            opacity: 0;
+            transform: translateX(30px);
+            transition: all 1s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        section.visible .about-stats {
+            opacity: 1;
+            transform: translateX(0);
+            transition-delay: 0.6s;
+        }
+
+        .stat-card {
+            padding: 2.5rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        section.visible .stat-card:nth-child(1) {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.8s;
+        }
+
+        section.visible .stat-card:nth-child(2) {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 1s;
+        }
+
+        section.visible .stat-card:nth-child(3) {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 1.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card:nth-child(1) {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+        }
+
+        .stat-card:nth-child(2) {
+            background: linear-gradient(135deg, var(--secondary), #f97316);
+        }
+
+        .stat-card:nth-child(3) {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
+
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        /* Навыки */
+        .skills-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2.5rem;
+            margin-top: 4rem;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        section.visible .skills-container {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.4s;
+        }
+
+        .skill-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2.5rem;
+            text-align: center;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        section.visible .skill-card:nth-child(1) {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.6s;
+        }
+
+        section.visible .skill-card:nth-child(2) {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 0.8s;
+        }
+
+        section.visible .skill-card:nth-child(3) {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 1s;
+        }
+
+        section.visible .skill-card:nth-child(4) {
+            opacity: 1;
+            transform: translateY(0);
+            transition-delay: 1.2s;
+        }
+
+        .skill-card:hover {
+            transform: translateY(-15px) scale(1.05);
+            box-shadow: var(--shadow);
+            border-color: var(--primary);
+        }
+
+        .skill-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            transition: var(--transition);
+        }
+
+        .skill-card:hover .skill-icon {
+            transform: scale(1.2) rotate(5deg);
+            color: var(--accent);
+        }
+
+        .skill-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+        }
+
+        .skill-description {
+            color: var(--gray);
+            line-height: 1.7;
+        }
+
+        /* Контакты */
+        .contact-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 1s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        section.visible .contact-container {
+            opacity: 1;
+            transform: scale(1);
+            transition-delay: 0.6s;
+        }
+
+        .contact-info {
+            text-align: center;
+        }
+
+        .contact-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            padding: 1.5rem 3rem;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: var(--transition);
+            font-size: 1.3rem;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+        }
+
+        .contact-item:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: var(--shadow);
+        }
+
+        .contact-icon {
+            font-size: 1.8rem;
+        }
+
+        /* Футер */
+        footer {
+            background: rgba(15, 23, 42, 0.9);
+            padding: 4rem 5%;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        [data-theme="light"] footer {
+            background: rgba(248, 250, 252, 0.9);
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .social-link {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light);
+            font-size: 1.5rem;
+            transition: var(--transition);
+            text-decoration: none;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .social-link:nth-child(1) {
+            animation: fadeInUp 0.8s ease forwards 0.5s;
+        }
+
+        .social-link:hover {
+            background: var(--primary);
+            transform: translateY(-5px) scale(1.1);
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.8rem;
+            }
+            
+            .about-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .hero-svg {
+                display: none;
+            }
+            
+            .contact-item {
+                padding: 1.2rem 2.5rem;
+                font-size: 1.2rem;
+            }
+            
+            .section-title {
+                font-size: 2.5rem;
+            }
+            
+            .settings-panel {
+                width: 90%;
+                right: -100%;
+            }
+            
+            .settings-panel.open {
+                right: 5%;
+            }
+        }
+
+        /* Плавающие частицы */
+        .floating-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+        
+        .particle {
+            position: absolute;
+            background: rgba(139, 92, 246, 0.3);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) translateX(100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Дополнительные анимации */
+        .floating {
+            animation: floating 6s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .spin-hover {
+            transition: transform 0.5s ease;
+        }
+
+        .spin-hover:hover {
+            transform: rotate(360deg);
+        }
+
+        .bounce-in {
+            animation: bounceIn 1s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+        }
+
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .wave {
+            animation: wave 4s ease-in-out infinite;
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+
+        /* Специальный стиль для имени loufiks */
+        .loufiks-name {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .loufiks-name::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--secondary);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        
+        .loufiks-name:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        /* Стили для скрытия элементов на другом языке */
+        [data-lang="ru"] .lang-en,
+        [data-lang="en"] .lang-ru {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Лоадер -->
+    <div class="loader">
+        <div class="spinner">
+            <div class="spinner-circle"></div>
+            <div class="spinner-circle"></div>
+        </div>
+    </div>
+
+    <!-- Панель настроек -->
+    <button class="settings-toggle">
+        <i class="fas fa-cog"></i>
+    </button>
+    
+    <div class="settings-panel">
+        <div class="settings-option">
+            <h3 class="lang-ru">Тема</h3>
+            <h3 class="lang-en">Theme</h3>
+            <div class="theme-selector">
+                <button class="theme-btn active" data-theme="dark">
+                    <span class="lang-ru">Тёмная</span>
+                    <span class="lang-en">Dark</span>
+                </button>
+                <button class="theme-btn" data-theme="light">
+                    <span class="lang-ru">Светлая</span>
+                    <span class="lang-en">Light</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="settings-option">
+            <h3 class="lang-ru">Язык</h3>
+            <h3 class="lang-en">Language</h3>
+            <div class="language-selector">
+                <button class="lang-btn active" data-lang="ru">Русский</button>
+                <button class="lang-btn" data-lang="en">English</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Навигация -->
+    <nav>
+        <div class="logo">
+            <i class="fas fa-code logo-icon spin-hover"></i>
+            <span>loufiks</span>
+        </div>
+        <div class="nav-links">
+            <a href="#home" class="lang-ru">Главная</a>
+            <a href="#home" class="lang-en">Home</a>
+            <a href="#about" class="lang-ru">Обо мне</a>
+            <a href="#about" class="lang-en">About</a>
+            <a href="#skills" class="lang-ru">Навыки</a>
+            <a href="#skills" class="lang-en">Skills</a>
+            <a href="#contact" class="lang-ru">Контакты</a>
+            <a href="#contact" class="lang-en">Contact</a>
+            <!-- Добавленная кнопка NFT канала -->
+            <a href="https://t.me/kkw_NFT" target="_blank" class="lang-ru">Мой NFT канал</a>
+            <a href="https://t.me/kkw_NFT" target="_blank" class="lang-en">My NFT Channel</a>
+        </div>
+    </nav>
+
+    <!-- Hero секция -->
+    <section id="home" class="hero">
+        <div class="floating-particles" id="particles"></div>
+        <div class="hero-content">
+            <h1>
+                <span class="lang-ru">Привет! Я </span>
+                <span class="lang-en">Hello! I'm </span>
+                <span class="loufiks-name">loufiks</span>
+            </h1>
+            <p class="lang-ru">Веб-разработчик с фокусом на создании современных и интерактивных веб-приложений.</p>
+            <p class="lang-en">Web developer focused on creating modern and interactive web applications.</p>
+            <div class="hero-buttons">
+                <a href="#contact" class="btn floating">
+                    <span class="lang-ru">Связаться со мной</span>
+                    <span class="lang-en">Contact Me</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- SVG анимация -->
+        <svg class="hero-svg" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+            <path class="svg-path" d="M100,300 Q200,100 400,300 T700,300" fill="none" stroke="url(#gradient)" stroke-width="4"/>
+            <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#8b5cf6"/>
+                    <stop offset="100%" stop-color="#ec4899"/>
+                </linearGradient>
+            </defs>
+            <circle cx="100" cy="300" r="10" fill="#8b5cf6">
+                <animate attributeName="r" values="10;15;10" dur="3s" repeatCount="indefinite"/>
+                <animate attributeName="fill" values="#8b5cf6;#ec4899;#8b5cf6" dur="6s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="700" cy="300" r="10" fill="#ec4899">
+                <animate attributeName="r" values="10;15;10" dur="3s" repeatCount="indefinite" begin="1s"/>
+                <animate attributeName="fill" values="#ec4899;#8b5cf6;#ec4899" dur="6s" repeatCount="indefinite" begin="1s"/>
+            </circle>
+            <circle cx="400" cy="300" r="8" fill="#f59e0b" class="floating">
+                <animate attributeName="opacity" values="0.7;1;0.7" dur="4s" repeatCount="indefinite"/>
+            </circle>
+        </svg>
+    </section>
+
+    <!-- Обо мне -->
+    <section id="about">
+        <h2 class="section-title wave">
+            <span class="lang-ru">Обо мне</span>
+            <span class="lang-en">About Me</span>
+        </h2>
+        <div class="about-content">
+            <div class="about-text">
+                <h3 class="lang-ru">Продажа и создание контента</h3>
+                <h3 class="lang-en">Passion for Creating Amazing Digital Products</h3>
+                <p class="lang-ru">Я <span class="loufiks-name">loufiks</span>, веб-разработчик с опытом создания современных веб-приложений. Этот сайт я создал самостоятельно, чтобы продемонстрировать свои возможности и поделиться своими работами.</p>
+                <p class="lang-en">I'm <span class="loufiks-name">loufiks</span>, a web developer with experience in creating modern web applications. I created this website myself to showcase my capabilities and share my work.</p>
+                <p class="lang-ru">Моя цель - создавать интуитивно понятные и визуально привлекательные веб-приложения, которые решают реальные проблемы пользователей.</p>
+                <p class="lang-en">My goal is to create intuitive and visually appealing web applications that solve real user problems.</p>
+                <p class="lang-ru">Я постоянно изучаю новые технологии и подходы к разработке, чтобы оставаться в курсе последних тенденций в индустрии.</p>
+                <p class="lang-en">I constantly study new technologies and development approaches to stay up-to-date with the latest industry trends.</p>
+            </div>
+            <div class="about-stats">
+                <div class="stat-card bounce-in">
+                    <div class="stat-number">50+</div>
+                    <div class="lang-ru">Завершенных проектов</div>
+                    <div class="lang-en">Completed Projects</div>
+                </div>
+                <div class="stat-card bounce-in">
+                    <div class="stat-number">98%</div>
+                    <div class="lang-ru">Удовлетворенность клиентов</div>
+                    <div class="lang-en">Client Satisfaction</div>
+                </div>
+                <div class="stat-card bounce-in">
+                    <div class="stat-number">21+</div>
+                    <div class="lang-ru">Успешных сделок</div>
+                    <div class="lang-en">Successful transitions</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Навыки -->
+    <section id="skills">
+        <h2 class="section-title">
+            <span class="lang-ru">Мои навыки</span>
+            <span class="lang-en">My Skills</span>
+        </h2>
+        <div class="skills-container">
+            <div class="skill-card">
+                <i class="fas fa-code skill-icon spin-hover"></i>
+                <div class="skill-title lang-ru">Фронтенд разработка</div>
+                <div class="skill-title lang-en">Frontend Development</div>
+                <div class="skill-description lang-ru">HTML, CSS, JavaScript, React, Vue.js с акцентом на создание плавных анимаций и интерактивных интерфейсов</div>
+                <div class="skill-description lang-en">HTML, CSS, JavaScript, React, Vue.js with a focus on creating smooth animations and interactive interfaces</div>
+            </div>
+            <div class="skill-card">
+                <i class="fas fa-server skill-icon spin-hover"></i>
+                <div class="skill-title lang-ru">Создатель контента</div>
+                <div class="skill-title lang-en">Content Creator</div>
+                <div class="skill-description lang-ru">Создатель тг ботов, каналов, аккаунтов</div>
+                <div class="skill-description lang-en">Creator of tg bots, channels, accounts</div>
+            </div>
+            <div class="skill-card">
+                <i class="fas fa-paint-brush skill-icon spin-hover"></i>
+                <div class="skill-title lang-ru">UI/UX дизайн</div>
+                <div class="skill-title lang-en">UI/UX Design</div>
+                <div class="skill-description lang-ru">Figma, Adobe XD, пользовательские интерфейсы с фокусом на удобство использования и визуальную привлекательность</div>
+                <div class="skill-description lang-en">Figma, Adobe XD, user interfaces with focus on usability and visual appeal</div>
+            </div>
+            <div class="skill-card">
+                <i class="fas fa-mobile-alt skill-icon spin-hover"></i>
+                <div class="skill-title lang-ru">Адаптивный дизайн</div>
+                <div class="skill-title lang-en">Responsive Design</div>
+                <div class="skill-description lang-ru">Создание сайтов для всех устройств с безупречным отображением на любых экранах</div>
+                <div class="skill-description lang-en">Creating websites for all devices with perfect display on any screen</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Контакты -->
+    <section id="contact">
+        <h2 class="section-title">
+            <span class="lang-ru">Связаться со мной</span>
+            <span class="lang-en">Contact Me</span>
+        </h2>
+        <div class="contact-container">
+            <div class="contact-info">
+                <a href="https://t.me/loufiks" class="contact-item floating" target="_blank">
+                    <i class="fab fa-telegram contact-icon wave"></i>
+                    <span>@loufiks</span>
+                </a>
+                <!-- Добавленная кнопка NFT канала -->
+                <a href="https://t.me/kkw_NFT" class="contact-item floating" target="_blank" style="margin-top: 20px; background: linear-gradient(135deg, var(--secondary), #f97316);">
+                    <i class="fas fa-image contact-icon wave"></i>
+                    <span class="lang-ru">Мой NFT канал</span>
+                    <span class="lang-en">My NFT Channel</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Футер -->
+    <footer>
+        <div class="social-links">
+            <a href="https://t.me/loufiks" class="social-link floating" target="_blank">
+                <i class="fab fa-telegram spin-hover"></i>
+            </a>
+            <!-- Добавленная кнопка NFT канала в футере -->
+            <a href="https://t.me/kkw_NFT" class="social-link floating" target="_blank">
+                <i class="fas fa-image spin-hover"></i>
+            </a>
+        </div>
+        <p>&copy; 2025. <span class="loufiks-name">loufiks</span> 
+            <span class="lang-ru">Все права защищены.</span>
+            <span class="lang-en">All rights reserved.</span>
+        </p>
+    </footer>
+
+    <script>
+        // Лоадер
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.querySelector('.loader').classList.add('hidden');
+            }, 2000);
+        });
+
+        // Плавная прокрутка
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    window.scrollTo({
+                        top: target.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Анимация при прокрутке
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Создание плавающих частиц
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            const size = Math.random() * 20 + 5;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.animationDelay = `${Math.random() * 15}s`;
+            particle.style.animationDuration = `${15 + Math.random() * 10}s`;
+            particlesContainer.appendChild(particle);
+        }
+
+        // Панель настроек
+        const settingsToggle = document.querySelector('.settings-toggle');
+        const settingsPanel = document.querySelector('.settings-panel');
+        
+        settingsToggle.addEventListener('click', () => {
+            settingsPanel.classList.toggle('open');
+        });
+
+        // Смена темы
+        const themeButtons = document.querySelectorAll('.theme-btn');
+        
+        themeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const theme = btn.getAttribute('data-theme');
+                document.body.setAttribute('data-theme', theme);
+                
+                themeButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Сохранение в localStorage
+                localStorage.setItem('theme', theme);
+            });
+        });
+
+        // Смена языка
+        const langButtons = document.querySelectorAll('.lang-btn');
+        
+        function changeLanguage(lang) {
+            document.documentElement.lang = lang;
+            document.body.setAttribute('data-lang', lang);
+            
+            // Обновление title
+            if (lang === 'en') {
+                document.title = 'loufiks | Web Development';
+            } else {
+                document.title = 'loufiks | Веб-разработка';
+            }
+            
+            // Сохранение в localStorage
+            localStorage.setItem('language', lang);
+        }
+        
+        langButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lang = btn.getAttribute('data-lang');
+                
+                langButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                changeLanguage(lang);
+            });
+        });
+
+        // Загрузка сохраненной темы и языка
+        const savedTheme = localStorage.getItem('theme');
+        const savedLang = localStorage.getItem('language');
+        
+        if (savedTheme) {
+            document.body.setAttribute('data-theme', savedTheme);
+            themeButtons.forEach(btn => {
+                if (btn.getAttribute('data-theme') === savedTheme) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+        
+        if (savedLang) {
+            changeLanguage(savedLang);
+            langButtons.forEach(btn => {
+                if (btn.getAttribute('data-lang') === savedLang) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Закрытие панели настроек при клике вне ее
+        document.addEventListener('click', (e) => {
+            if (!settingsPanel.contains(e.target) && !settingsToggle.contains(e.target)) {
+                settingsPanel.classList.remove('open');
+            }
+        });
+    </script>
+</body>
+</html>
